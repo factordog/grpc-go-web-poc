@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package smpl.time.api.v1;
+
+option go_package = "api/grpctime";
+
+message GetGreetRequest {
+}
+
+message GetCurrentTimeRequest {
+}
+
+message GetCurrentTimeResponse {
+  string current_time = 1;
+}
+
+message GetGreetResponse {
+  string greet = 1;
+}
+
+service TimeService {
+  rpc GetCurrentTime(GetCurrentTimeRequest) returns (GetCurrentTimeResponse);
+  rpc GetGreet(GetGreetRequest) returns (GetGreetResponse);
+}

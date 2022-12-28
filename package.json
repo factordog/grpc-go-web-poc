@@ -1,0 +1,7 @@
+{
+  "scripts": {
+    "gen": "protoc -I . --go_out=./server --go-grpc_out=./server time.proto",
+    "genfe": "protoc -I=. time.proto --js_out=import_style=commonjs:./client --grpc-web_out=import_style=commonjs,mode=grpcwebtext:./client",
+    "proxy": "envoy -c envoy.yaml"
+  }
+}
