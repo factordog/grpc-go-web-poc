@@ -1,7 +1,10 @@
 {
   "scripts": {
     "gen": "protoc -I . --go_out=./server --go-grpc_out=./server time.proto",
-    "genfe": "protoc -I=. time.proto --js_out=import_style=commonjs:./client --grpc-web_out=import_style=commonjs,mode=grpcwebtext:./client",
+    "genfe": "protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_opt=outputClientImpl=grpc-web --ts_proto_out=./client-react/generated time.proto",
     "proxy": "envoy -c envoy.yaml"
+  },
+  "devDependencies": {
+    "ts-proto": "^1.136.1"
   }
 }
