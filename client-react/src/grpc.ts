@@ -11,3 +11,8 @@ const client = new TimeServiceClientImpl(rpc);
 console.log(await client.GetGreet({}));
 console.log(await client.GetCurrentTime({}));
 
+const stream = client.StreamTimeUpdates({});
+stream.subscribe((data: any) => {
+    console.log(data);
+});
+

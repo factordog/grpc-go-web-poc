@@ -21,4 +21,5 @@ message GetGreetResponse {
 service TimeService {
   rpc GetCurrentTime(GetCurrentTimeRequest) returns (GetCurrentTimeResponse);
   rpc GetGreet(GetGreetRequest) returns (GetGreetResponse);
+  rpc StreamTimeUpdates(GetCurrentTimeRequest) returns (stream GetCurrentTimeResponse) {}
 }

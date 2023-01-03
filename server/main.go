@@ -29,6 +29,18 @@ func (t *timeService) GetGreet(ctx context.Context, req *pb.GetGreetRequest) (*p
 	return &pb.GetGreetResponse{Greet: "Hello!"}, nil
 }
 
+func (t *timeService) StreamTimeUpdates(rect *pb.GetCurrentTimeRequest, stream pb.TimeService_StreamTimeUpdatesServer) error {
+	for i := 1; i <= 5; i++ {
+		fmt.Println("Iteration", i)
+		if err := stream.Send(&pb.GetCurrentTimeResponse{CurrentTime: time.Now().String()}); err != nil {
+			return err
+		}
+		time.Sleep(time.Second)
+	}
+
+	return nil
+}
+
 func main() {
 	log.Printf("Time service starting on %s", listenAddress)
 	lis, err := net.Listen("tcp", listenAddress)

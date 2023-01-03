@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type TimeServiceClient interface {
 	GetCurrentTime(ctx context.Context, in *GetCurrentTimeRequest, opts ...grpc.CallOption) (*GetCurrentTimeResponse, error)
 	GetGreet(ctx context.Context, in *GetGreetRequest, opts ...grpc.CallOption) (*GetGreetResponse, error)
+	StreamTimeUpdates(ctx context.Context, in *GetCurrentTimeRequest, opts ...grpc.CallOption) (TimeService_StreamTimeUpdatesClient, error)
 }
 
 type timeServiceClient struct {
@@ -52,12 +53,45 @@ func (c *timeServiceClient) GetGreet(ctx context.Context, in *GetGreetRequest, o
 	return out, nil
 }
 
+func (c *timeServiceClient) StreamTimeUpdates(ctx context.Context, in *GetCurrentTimeRequest, opts ...grpc.CallOption) (TimeService_StreamTimeUpdatesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &TimeService_ServiceDesc.Streams[0], "/smpl.time.api.v1.TimeService/StreamTimeUpdates", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &timeServiceStreamTimeUpdatesClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type TimeService_StreamTimeUpdatesClient interface {
+	Recv() (*GetCurrentTimeResponse, error)
+	grpc.ClientStream
+}
+
+type timeServiceStreamTimeUpdatesClient struct {
+	grpc.ClientStream
+}
+
+func (x *timeServiceStreamTimeUpdatesClient) Recv() (*GetCurrentTimeResponse, error) {
+	m := new(GetCurrentTimeResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // TimeServiceServer is the server API for TimeService service.
 // All implementations must embed UnimplementedTimeServiceServer
 // for forward compatibility
 type TimeServiceServer interface {
 	GetCurrentTime(context.Context, *GetCurrentTimeRequest) (*GetCurrentTimeResponse, error)
 	GetGreet(context.Context, *GetGreetRequest) (*GetGreetResponse, error)
+	StreamTimeUpdates(*GetCurrentTimeRequest, TimeService_StreamTimeUpdatesServer) error
 	mustEmbedUnimplementedTimeServiceServer()
 }
 
@@ -70,6 +104,9 @@ func (UnimplementedTimeServiceServer) GetCurrentTime(context.Context, *GetCurren
 }
 func (UnimplementedTimeServiceServer) GetGreet(context.Context, *GetGreetRequest) (*GetGreetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGreet not implemented")
+}
+func (UnimplementedTimeServiceServer) StreamTimeUpdates(*GetCurrentTimeRequest, TimeService_StreamTimeUpdatesServer) error {
+	return status.Errorf(codes.Unimplemented, "method StreamTimeUpdates not implemented")
 }
 func (UnimplementedTimeServiceServer) mustEmbedUnimplementedTimeServiceServer() {}
 
@@ -120,6 +157,27 @@ func _TimeService_GetGreet_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TimeService_StreamTimeUpdates_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GetCurrentTimeRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(TimeServiceServer).StreamTimeUpdates(m, &timeServiceStreamTimeUpdatesServer{stream})
+}
+
+type TimeService_StreamTimeUpdatesServer interface {
+	Send(*GetCurrentTimeResponse) error
+	grpc.ServerStream
+}
+
+type timeServiceStreamTimeUpdatesServer struct {
+	grpc.ServerStream
+}
+
+func (x *timeServiceStreamTimeUpdatesServer) Send(m *GetCurrentTimeResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 // TimeService_ServiceDesc is the grpc.ServiceDesc for TimeService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -136,6 +194,12 @@ var TimeService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _TimeService_GetGreet_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "StreamTimeUpdates",
+			Handler:       _TimeService_StreamTimeUpdates_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "time.proto",
 }
