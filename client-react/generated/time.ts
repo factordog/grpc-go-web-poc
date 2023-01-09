@@ -7,6 +7,10 @@ import { share } from "rxjs/operators";
 
 export const protobufPackage = "smpl.time.api.v1";
 
+export interface Message {
+  message: string;
+}
+
 export interface GetGreetRequest {
 }
 
@@ -20,6 +24,53 @@ export interface GetCurrentTimeResponse {
 export interface GetGreetResponse {
   greet: string;
 }
+
+function createBaseMessage(): Message {
+  return { message: "" };
+}
+
+export const Message = {
+  encode(message: Message, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.message !== "") {
+      writer.uint32(10).string(message.message);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): Message {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMessage();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.message = reader.string();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): Message {
+    return { message: isSet(object.message) ? String(object.message) : "" };
+  },
+
+  toJSON(message: Message): unknown {
+    const obj: any = {};
+    message.message !== undefined && (obj.message = message.message);
+    return obj;
+  },
+
+  fromPartial<I extends Exact<DeepPartial<Message>, I>>(object: I): Message {
+    const message = createBaseMessage();
+    message.message = object.message ?? "";
+    return message;
+  },
+};
 
 function createBaseGetGreetRequest(): GetGreetRequest {
   return {};
@@ -203,6 +254,7 @@ export interface TimeService {
     request: DeepPartial<GetCurrentTimeRequest>,
     metadata?: grpc.Metadata,
   ): Observable<GetCurrentTimeResponse>;
+  BackAndForth(request: Observable<DeepPartial<Message>>, metadata?: grpc.Metadata): Observable<Message>;
 }
 
 export class TimeServiceClientImpl implements TimeService {
@@ -213,6 +265,7 @@ export class TimeServiceClientImpl implements TimeService {
     this.GetCurrentTime = this.GetCurrentTime.bind(this);
     this.GetGreet = this.GetGreet.bind(this);
     this.StreamTimeUpdates = this.StreamTimeUpdates.bind(this);
+    this.BackAndForth = this.BackAndForth.bind(this);
   }
 
   GetCurrentTime(
@@ -231,6 +284,10 @@ export class TimeServiceClientImpl implements TimeService {
     metadata?: grpc.Metadata,
   ): Observable<GetCurrentTimeResponse> {
     return this.rpc.invoke(TimeServiceStreamTimeUpdatesDesc, GetCurrentTimeRequest.fromPartial(request), metadata);
+  }
+
+  BackAndForth(request: Observable<DeepPartial<Message>>, metadata?: grpc.Metadata): Observable<Message> {
+    throw new Error("ts-proto does not yet support client streaming!");
   }
 }
 

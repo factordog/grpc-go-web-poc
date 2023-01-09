@@ -29,13 +29,23 @@ func (t *timeService) GetGreet(ctx context.Context, req *pb.GetGreetRequest) (*p
 	return &pb.GetGreetResponse{Greet: "Hello!"}, nil
 }
 
-func (t *timeService) StreamTimeUpdates(rect *pb.GetCurrentTimeRequest, stream pb.TimeService_StreamTimeUpdatesServer) error {
+func (t *timeService) StreamTimeUpdates(req *pb.GetCurrentTimeRequest, stream pb.TimeService_StreamTimeUpdatesServer) error {
 	for i := 1; i <= 5; i++ {
 		fmt.Println("Iteration", i)
 		if err := stream.Send(&pb.GetCurrentTimeResponse{CurrentTime: time.Now().String()}); err != nil {
 			return err
 		}
 		time.Sleep(time.Second)
+	}
+
+	return nil
+}
+
+func (t *timeService) BackAndForth(stream pb.TimeService_BackAndForthServer) error {
+	if err := stream.Send(&pb.Message{
+		Message: "Hello from server",
+	}); err != nil {
+		return err
 	}
 
 	return nil
